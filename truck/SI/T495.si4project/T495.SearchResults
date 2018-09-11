@@ -1,0 +1,4 @@
+---- T495XU00002 Matches (3 in 2 files) ----
+Hook_Timer10msEventB in oem_main.c (D:\SVN\T495_ARR\truck\code\oem\LCFC_COMMON) : 		  AdapterID = TypeCAdpID; //T495XU00002: Fix when test P2P function cannot show AC plug-in state on sink side.
+DetectAdaptorWatt in OEM_TPS65988.c (D:\SVN\T495_ARR\truck\code\oem\LCFC_COMMON) :             else if(Port1CurrentTypeCWatt > 0)//A485D000145: 0->15  //T495XU00002: change to 0 for P2P function 15W charge.
+DetectPort2AdaptorWatt in OEM_TPS65988.c (D:\SVN\T495_ARR\truck\code\oem\LCFC_COMMON) :             else if(Port2CurrentTypeCWatt > 0) //T495XU00002: change to 0 for P2P function 15W charge.

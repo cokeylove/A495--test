@@ -1,0 +1,9 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++
+product name:                    ThingkPad T495 
+project name (TDMS):             T495          
+PLM code:                        A485
+EC chip /charger IC:             ITE8186 / BQ2570X
+temperature:                     SMBUS(thermistor) 
+base on:                         A485 
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
