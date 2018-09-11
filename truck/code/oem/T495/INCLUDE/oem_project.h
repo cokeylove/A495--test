@@ -433,6 +433,8 @@ include (S3, S4, and S5)�C*/
  *===========================================================================*/
 #define Support_TYPE_C       4	// tps65988
 
+#define Support_Lenovo_P2P_V2P0      TRUE  
+
 #define Support_2Port		TRUE
 #define TYPECPort1			1
 #if Support_2Port

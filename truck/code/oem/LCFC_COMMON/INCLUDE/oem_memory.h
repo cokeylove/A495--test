@@ -2418,13 +2418,17 @@ typedef enum
 #define    UCSI_DATA_ROLE						    SD_uchar_8(OEMRAMC+0xB7)
 #define    UCSI_DATA_ROLE2						    SD_uchar_8(OEMRAMC+0xB8)
 #define    UCSI_RelativeStateOfChg			        SD_uchar_8(OEMRAMC+0xB9)
+
+#if Support_Lenovo_P2P_V2P0
 #define    UCSI_P2P_Charge_Disable			        SD_uchar_8(OEMRAMC+0xBA)
-#define    UCSI_P2P_Charge_Disable_SINK			        SD_uchar_8(OEMRAMC+0xBB)
+#define    UCSI_P2P_Charge_Disable_SINK			    SD_uchar_8(OEMRAMC+0xBB)
+#endif
 #define    UCSI_RDO1_CONNECTOR2						SD_uchar_8(OEMRAMC+0xC0)
 #define    UCSI_RDO2_CONNECTOR2						SD_uchar_8(OEMRAMC+0xC1)
 #define    UCSI_RDO3_CONNECTOR2						SD_uchar_8(OEMRAMC+0xC2)
 #define    UCSI_RDO4_CONNECTOR2						SD_uchar_8(OEMRAMC+0xC3)
 #define    UCSI_PDOs_Buffer_CONNECTOR2              SD_Ptr_uchar_8(OEMRAMC+0xD0)
+
 
 
 

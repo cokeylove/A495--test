@@ -435,12 +435,6 @@ BYTE S5S0_Init_Status(void)
 	}
   // add for Enhanced Beep alarm when MEM lost -  //A485D00087:
 
-	//A485D00084: Fix P2P function abnormal
-  //  if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
-   //     SET_MASK(TypeCStatus3,NeedUpdateToPartner);
-  //  if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
-   //     SET_MASK(TypeCPort2Status3,NeedUpdateToPartner);
-  //A485D00084: Fix P2P function abnormal
 	return 0;
 }
 //-------------------------------------------------------------------------------------
@@ -628,12 +622,6 @@ BYTE S0S5_Init_Status(void)
    BYPASS_PAD_OFF();//David+ EE required
  //for LCFC common code
   OEM_SYSTEM_S0_S5();
- // A485D00084: Fix P2P function abnormal
-  //   if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
-  //      SET_MASK(TypeCStatus3,NeedUpdateToPartner);
- //   if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
-  //      SET_MASK(TypeCPort2Status3,NeedUpdateToPartner);
-//		A485D00084: Fix P2P function abnormal
     #if SYSTEM_ENABLE_G3_WAKEUP_LAN
     Chk_WOLStatus();	//A485D000106+ fix wol cannot wakeup for g3 mode
     #endif
@@ -745,12 +733,6 @@ BYTE S0S3_Init_Status(void)
   
 	//for LCFC common code
 	OEM_SYSTEM_S0_S3();
-	//A485D00084: Fix P2P function abnormal
-  //   if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
-  //      SET_MASK(TypeCStatus3,NeedUpdateToPartner);
-  //  if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
-   //     SET_MASK(TypeCPort2Status3,NeedUpdateToPartner);
-	//A485D00084: Fix P2P function abnormal
 	return 0;
 }
 
@@ -921,12 +903,6 @@ BYTE S3S0_Init_Status(void)
 
   //for LCFC common code
   OEM_SYSTEM_S3_S0();
-  //A485D00084: Fix P2P function abnormal
-  //   if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
-  //      SET_MASK(TypeCStatus3,NeedUpdateToPartner);
-  //  if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Power_Type) && IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
-  //      SET_MASK(TypeCPort2Status3,NeedUpdateToPartner);
-	//A485D00084: Fix P2P function abnormal
   return 0;
 }
 

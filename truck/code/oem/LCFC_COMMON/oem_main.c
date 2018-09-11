@@ -444,8 +444,7 @@ void Hook_Timer10msEventB(void)
 	 	{
           u4ACAdaptorCap = CurrentTypeCWatt;
 		  //A485D00057: Fix wake on lan Fail--->Start
-		  AdapterID = u4ACAdaptorCap;
-         // u4ACAdaptorCap = u4ACAdaptorCap;
+		  AdapterID = TypeCAdpID; //T495XU00002: Fix when test P2P function cannot show AC plug-in state on sink side.
           AdpWatt = u4ACAdaptorCap;
           SecAdpWatt = u4ACAdaptorCap;
 		  //A485D00057: Fix wake on lan Fail--->End

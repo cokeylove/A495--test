@@ -157,7 +157,7 @@ void DetectAdaptorWatt()
 {
     BYTE i;
     WORD VoltageTemp;
-//A485D00080---S
+    //A485D00080---S
     if(TypeCAdpDetectDelay)
     {
         TypeCAdpDetectDelay--;
@@ -308,7 +308,7 @@ void DetectAdaptorWatt()
             {
                 TypeCPort1AdpID = AdapterID_36W;
             }
-            else if(Port1CurrentTypeCWatt > 15)//A485D000145: 0->15
+            else if(Port1CurrentTypeCWatt > 0)//A485D000145: 0->15  //T495XU00002: change to 0 for P2P function 15W charge.
             {
                 TypeCPort1AdpID = AdapterID_Lower36W;
             }
@@ -549,7 +549,7 @@ void DetectPort2AdaptorWatt()
             {
                 TypeCPort2AdpID = AdapterID_36W;
             }
-            else if(Port2CurrentTypeCWatt > 15)
+            else if(Port2CurrentTypeCWatt > 0) //T495XU00002: change to 0 for P2P function 15W charge.
             {
                 TypeCPort2AdpID = AdapterID_Lower36W;
             }
@@ -682,7 +682,6 @@ void InitialTypecPD(void)
                     if(TypeCCommFailCnt == 15)
                     {
                         TypeCIniDelay = 200;
-                    //    TypeCProcessStep = TPS65988_ERROR_STATE;
                         TypeCCommFailCnt = 0;
                     }
                 }
@@ -707,18 +706,15 @@ void InitialTypecPD(void)
                     if(TypeCCommFailCnt == 3)
                     {
                         TypeCIniDelay = 200;
-                    //    TypeCProcessStep = TPS65988_ERROR_STATE;
                         TypeCCommFailCnt = 0;
                     }
                 }
                 else
                 {
                     TypeCCommFailCnt = 0;
-                    /*
-                    *    confirm TPS65988 in Application mode
-                    */
                     if(TPS65988_BOOT_FLAG_OTP_CONFIG_BOOT_DEAD_BATTERY(SMB3_DATA[0]))
                     {
+                        //DeadBatteryFlag:PD Controller booted in dead-battery mode.
                         SET_MASK(TypeCStatus2,TypeC_Dead_Battery_Mode);
                         TypeCProcessStep = TPS65988_INIT_EVENT_MASK_READ_TO_GET_SIZE;
                     }
@@ -749,17 +745,13 @@ void InitialTypecPD(void)
                 **************************************************
                 *     Initialize INT_EVENT
                 **************************************************
-                */
-
-                //bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_INT_EVENT2, tmpPDPort1INT,bRead_I2C_NULL);
-
+                */                
                 if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_INT_MASK2, SMB3_DATA,bRead_I2C_NULL))
                 {
                     TypeCCommFailCnt++;
                     if(TypeCCommFailCnt == 3)
                     {
-                        TypeCIniDelay = 200;
-                       // TypeCProcessStep = TPS65988_ERROR_STATE;
+                        TypeCIniDelay = 200;                        
                         TypeCCommFailCnt = 0;
                     }
                 }
@@ -774,7 +766,7 @@ void InitialTypecPD(void)
                 *    Initialize event interrupt masks
                 */
                 SMB3_DATA[0] = 0x38;//BIT5+BIT4+BIT3;
-                SMB3_DATA[1] = 0x78;//BIT5+BIT4+BIT3;
+                SMB3_DATA[1] = 0x78;//BIT6+BIT5+BIT4+BIT3;
                 SMB3_DATA[2] = 0x02;//BIT1
                 SMB3_DATA[3] = 0x4D;//BIT6+BIT3+BIT2+BIT0;
                 SMB3_DATA[4] = 0x00;
@@ -791,40 +783,11 @@ void InitialTypecPD(void)
                     if(TypeCCommFailCnt == 3)
                     {
                         TypeCIniDelay = 200;
-                       // TypeCProcessStep = TPS65988_ERROR_STATE;
                         TypeCCommFailCnt = 0;
                     }
                 }
                 else
                 {
-                    //bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_INT_EVENT2, tmpPDPort1INT,bRead_I2C_NULL);
-#if 0
-                    // WA for PD rework,WTF +
-                    SMB3_DATA[0] = 0x00;//BIT3;
-                    SMB3_DATA[1] = 0x00;//BIT5+BIT4+BIT3;
-                    SMB3_DATA[2] = 0x00;
-                    SMB3_DATA[3] = 0x00;//BIT7+BIT3+BIT2+BIT0;
-                    SMB3_DATA[4] = 0x00;
-                    SMB3_DATA[5] = 0x00;
-                    SMB3_DATA[6] = 0x00;
-                    SMB3_DATA[7] = 0x00;//BIT3+BIT2+BIT1+BIT0;
-                    SMB3_DATA[8] = 0x00;
-                    SMB3_DATA[9] = 0x00;
-                    SMB3_DATA[10] = 0x00;
-
-                    if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_01_Addr, TPS65988_INT_MASK1, &SMB3_DATA[0], TPS65988_INT_SIZE, SMBus_NoPEC))
-                    {
-                        TypeCCommFailCnt++;
-                        if(TypeCCommFailCnt == 3)
-                        {
-                            TypeCIniDelay = 200;
-                            TypeCProcessStep = TPS65988_ERROR_STATE;
-                            TypeCCommFailCnt = 0;
-                            break;
-                        }
-                    }
-                    // WA for PD rework,WTF -
-#endif
                     TypeCCommFailCnt = 0;
                     TypeCProcessStep++;
                 }
@@ -833,44 +796,6 @@ void InitialTypecPD(void)
                 /*
                 *    Initialize event interrupt masks
                 */
-#if 0
-                // WA for PD rework,WTF +
-                SMB3_DATA[0] = 0xFF;
-                SMB3_DATA[1] = 0xFF;
-                SMB3_DATA[2] = 0xFF;
-                SMB3_DATA[3] = 0xFF;
-                SMB3_DATA[4] = 0xFF;
-                SMB3_DATA[5] = 0xFF;
-                SMB3_DATA[6] = 0xFF;
-                SMB3_DATA[7] = 0xFF;
-                SMB3_DATA[8] = 0xFF;
-                SMB3_DATA[9] = 0xFF;
-                SMB3_DATA[10] = 0xFF;
-
-                //if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_01_Addr, TPS65988_INT_CLEAR1, &SMB3_DATA[0], TPS65988_INT_SIZE, SMBus_NoPEC))
-                {
-                    TypeCCommFailCnt++;
-                    if(TypeCCommFailCnt == 3)
-                    {
-                        TypeCIniDelay = 200;
-                        TypeCProcessStep = TPS65988_ERROR_STATE;
-                        TypeCCommFailCnt = 0;
-                    }
-                }
-
-                //else if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_01_Addr, TPS65988_INT_CLEAR2, &SMB3_DATA[0], 11, SMBus_NoPEC))
-                //{
-                //  TypeCCommFailCnt++;
-                //      if(TypeCCommFailCnt == 3)
-                //      {
-                //      TypeCIniDelay = 200;
-                //      TypeCProcessStep = TPS65988_ERROR_STATE;
-                //      TypeCCommFailCnt = 0;
-                //      }
-                //}
-                else
-#endif
-                    // WA for PD rework,WTF -
                 {
                     TypeCCommFailCnt = 0;
                     TypeCProcessStep++;
@@ -884,7 +809,6 @@ void InitialTypecPD(void)
                     if(TypeCCommFailCnt == 3)
                     {
                         TypeCIniDelay = 200;
-                       // TypeCProcessStep = TPS65988_ERROR_STATE;
                         TypeCCommFailCnt = 0;
                     }
                 }
@@ -911,9 +835,40 @@ void InitialTypecPD(void)
                             {
                                 TypeCProcessStep++;
                             }
+//T495XU0002: S+  enable P2P function
+ #if Support_Lenovo_P2P_V2P0
+                            CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Type);
+                            if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
+			  			    {
+								SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+								CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
+							}
+#endif
+//T495XU0002: E+
                         }
                         else
                         {
+                            /*
+                            *    USB PD act as Source
+                            */
+//T495XU0002: S+  enable P2P function
+ #if Support_Lenovo_P2P_V2P0
+                            SET_MASK(TypeCStatus3,TypeC_Laptop_Power_Type);
+			  			    if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
+			  			    {
+								CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+								CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
+                                SET_MASK(TypeCStatus3,NeedUpdateToPartner);
+                                CLEAR_MASK(TypeCStatus,TypeCAdpExist);
+                                CLEAR_MASK(TypeCStatus,TypeCAdpReady);
+                                TypeCAdpID = 0;
+                                CurrentTypeCWatt = 0;
+                                TypeCAdpPdStableCheck = 0;
+                                CurrentTypeCV = 0;
+                                CurrentTypeCI = 0;
+							}
+#endif
+//T495XU0002: E+
                             TypeCProcessStep++;
                         }
                     }
@@ -944,7 +899,6 @@ void InitialTypecPD(void)
             case INITIAL_FINISH:
                 //Initial finish
                 SET_MASK(TypeCStatus,TypeCIniOK);
-                //bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_INT_EVENT2, tmpPDPort1INT,bRead_I2C_NULL);
                 TempRomData = Read_Eflash_Byte(EEPROMA2,EEPROM_Bank7,EEPROM_TYPEC_STATUS);
                 if((TempRomData & 0x01) == 0x01)
                 {
@@ -997,7 +951,6 @@ void InitialTypecPDPort2(void)
                     if(TypeCPort2CommFailCnt == 15)
                     {
                         TypeCPort2IniDelay = 200;
-                   //     TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
                         TypeCPort2CommFailCnt = 0;
                     }
                 }
@@ -1022,18 +975,15 @@ void InitialTypecPDPort2(void)
                     if(TypeCPort2CommFailCnt == 3)
                     {
                         TypeCPort2IniDelay = 200;
-                   //     TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
                         TypeCPort2CommFailCnt = 0;
                     }
                 }
                 else
                 {
                     TypeCPort2CommFailCnt = 0;
-                    /*
-                    *    confirm TPS65988 in Application mode
-                    */
                     if(TPS65988_BOOT_FLAG_OTP_CONFIG_BOOT_DEAD_BATTERY(SMB3_DATA[0]))
                     {
+                        //DeadBatteryFlag:PD Controller booted in dead-battery mode.
                         SET_MASK(TypeCPort2Status2,TypeC_Dead_Battery_Mode);
                         TypeCPort2ProcessStep = TPS65988_INIT_EVENT_MASK_READ_TO_GET_SIZE;
                     }
@@ -1065,16 +1015,12 @@ void InitialTypecPDPort2(void)
                 *     Initialize INT_EVENT
                 **************************************************
                 */
-
-
-
                 if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_INT_MASK2, SMB3_DATA,bRead_I2C_NULL))
                 {
                     TypeCPort2CommFailCnt++;
                     if(TypeCPort2CommFailCnt == 3)
                     {
                         TypeCPort2IniDelay = 200;
-                  //      TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
                         TypeCPort2CommFailCnt = 0;
                     }
                 }
@@ -1105,40 +1051,11 @@ void InitialTypecPDPort2(void)
                     if(TypeCPort2CommFailCnt == 3)
                     {
                         TypeCPort2IniDelay = 200;
-                  //      TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
                         TypeCPort2CommFailCnt = 0;
                     }
                 }
                 else
                 {
-
-#if 0
-                    // WA for PD rework,WTF +
-                    SMB3_DATA[0] = 0x00;//BIT3;
-                    SMB3_DATA[1] = 0x00;//BIT5+BIT4+BIT3;
-                    SMB3_DATA[2] = 0x00;
-                    SMB3_DATA[3] = 0x00;//BIT7+BIT3+BIT2+BIT0;
-                    SMB3_DATA[4] = 0x00;
-                    SMB3_DATA[5] = 0x00;
-                    SMB3_DATA[6] = 0x00;
-                    SMB3_DATA[7] = 0x00;//BIT3+BIT2+BIT1+BIT0;
-                    SMB3_DATA[8] = 0x00;
-                    SMB3_DATA[9] = 0x00;
-                    SMB3_DATA[10] = 0x00;
-
-                    if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_02_Addr, TPS65988_INT_MASK1, &SMB3_DATA[0], TPS65988_INT_SIZE, SMBus_NoPEC))
-                    {
-                        TypeCPort2CommFailCnt++;
-                        if(TypeCPort2CommFailCnt == 3)
-                        {
-                            TypeCPort2IniDelay = 200;
-                            TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
-                            TypeCPort2CommFailCnt = 0;
-                            break;
-                        }
-                    }
-                    // WA for PD rework,WTF -
-#endif
                     TypeCPort2CommFailCnt = 0;
                     TypeCPort2ProcessStep++;
                 }
@@ -1147,44 +1064,6 @@ void InitialTypecPDPort2(void)
                 /*
                 *    Initialize event interrupt masks
                 */
-#if 0
-                // WA for PD rework,WTF +
-                SMB3_DATA[0] = 0xFF;
-                SMB3_DATA[1] = 0xFF;
-                SMB3_DATA[2] = 0xFF;
-                SMB3_DATA[3] = 0xFF;
-                SMB3_DATA[4] = 0xFF;
-                SMB3_DATA[5] = 0xFF;
-                SMB3_DATA[6] = 0xFF;
-                SMB3_DATA[7] = 0xFF;
-                SMB3_DATA[8] = 0xFF;
-                SMB3_DATA[9] = 0xFF;
-                SMB3_DATA[10] = 0xFF;
-
-                if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_02_Addr, TPS65988_INT_CLEAR1, &SMB3_DATA[0], TPS65988_INT_SIZE, SMBus_NoPEC))
-                {
-                    TypeCPort2CommFailCnt++;
-                    if(TypeCPort2CommFailCnt == 3)
-                    {
-                        TypeCPort2IniDelay = 200;
-                        TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
-                        TypeCPort2CommFailCnt = 0;
-                    }
-                }
-
-                //else  if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_02_Addr, TPS65988_INT_CLEAR2, &SMB3_DATA[0], 8, SMBus_NoPEC))
-                //{
-                //  TypeCPort2CommFailCnt++;
-                //      if(TypeCPort2CommFailCnt == 3)
-                //      {
-                //      TypeCPort2IniDelay = 200;
-                //      TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
-                //      TypeCPort2CommFailCnt = 0;
-                //      }
-                //}
-                else
-#endif
-                    // WA for PD rework,WTF -
                 {
                     TypeCPort2CommFailCnt = 0;
                     TypeCPort2ProcessStep++;
@@ -1192,14 +1071,12 @@ void InitialTypecPDPort2(void)
                 break;
             case CHECK_POWER_STATUS:
                 //Check power status for dead battery
-                //bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_POWER_STATUS, tmpPDPort1INT,bRead_I2C_NULL);
                 if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_POWER_STATUS, SMB3_DATA,bRead_I2C_NULL))
                 {
                     TypeCPort2CommFailCnt++;
                     if(TypeCPort2CommFailCnt == 3)
                     {
                         TypeCPort2IniDelay = 200;
-                    //    TypeCPort2ProcessStep = TPS65988_ERROR_STATE;
                         TypeCPort2CommFailCnt = 0;
                     }
                 }
@@ -1208,12 +1085,12 @@ void InitialTypecPDPort2(void)
                     TypeCPort2CommFailCnt = 0;
                     if(TPS65988_POWER_STATUS_TYPE_C_CURRENT_MASK(SMB3_DATA[0]) == TPS65988_POWER_STATUS_TYPE_C_CURRENT_PD_CONTRACT)
                     {
-                        /*
+                           /*
                             *   Connection is present
                             */
                         if(TPS65988_POWER_STATUS_SOURCE_SINK(SMB3_DATA[0]))
                         {
-                            /*
+                               /*
                                 *    USB PD act as Sink
                                 */
                             SET_MASK(TypeCPort2Status,TypeCAdpExist);
@@ -1226,9 +1103,41 @@ void InitialTypecPDPort2(void)
                             {
                                 TypeCPort2ProcessStep++;
                             }
+
+//T495XU0002: S+  enable P2P function                           
+#if Support_Lenovo_P2P_V2P0
+                            CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Type);
+			  			    if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
+			  			    {
+								SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+								CLEAR_MASK(TypeCPort2Status3,P2PPowerSwapWait);
+							}
+#endif
+//T495XU0002: E+
                         }
                         else
                         {
+                           /*
+                            *    USB PD act as Source
+                            */
+//T495XU0002: S+  enable P2P function 
+#if Support_Lenovo_P2P_V2P0
+                            SET_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Type);
+			  			    if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
+			  			    {
+								CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+								CLEAR_MASK(TypeCPort2Status3,P2PPowerSwapWait);
+                                SET_MASK(TypeCPort2Status3,NeedUpdateToPartner);
+                                CLEAR_MASK(TypeCStatus2,TypeCAdpExist);
+                                CLEAR_MASK(TypeCStatus2,TypeCAdpReady);
+                                TypeCPort2AdpID = 0;
+                                Port2CurrentTypeCWatt = 0;
+                                TypeCPort2AdpPdStableCheck = 0;
+                                Port2CurrentTypeCV = 0;
+                                Port2CurrentTypeCI = 0;
+							}
+#endif
+//T495XU0002: E+
                             TypeCPort2ProcessStep++;
                         }
                     }
@@ -1298,7 +1207,6 @@ BOOL TypecPDProcess(BOOL verify)
     if(Read_TYPEC_INT() || verify)
     {
         //Get Event number
-        //bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_INT_MASK2, tmpPDPort1INT,bRead_I2C_NULL);
         if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_INT_EVENT2, SMB3_DATA,bRead_I2C_NULL))
         {
             TypeCCommFailCnt++;
@@ -1314,6 +1222,7 @@ BOOL TypecPDProcess(BOOL verify)
             TypeCEventNum = TPS65988_INT_NO_EVENT_Num;
 //          if(TPS65988_INT_VDM_RECEIVED(SMB3_DATA[0]))
 //          {
+//              //A Vendor Defined Message has been received.
 //              SMB3_DATA[0] = 0x00;
 //              SMB3_DATA[1] = 0x08;    //Clear event bit
 //              SMB3_DATA[2] = 0x00;
@@ -1373,26 +1282,35 @@ BOOL TypecPDProcess(BOOL verify)
             switch(TypeCEventNum)
             {
                 case TPS65988_INT_PLUG_INSERT_OR_REMOVAL_Num:
+                    //USB Plug Status has Changed.
                     //RamDebug(0xC5);
+//T495XU0002: S+  enable P2P function
+#if !Support_Lenovo_P2P_V2P0
                     if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_CONTROL_CONFIG, SMB3_DATA_TEMP1,bRead_I2C_NULL))
                     {
                         //RamDebug(SMB3_DATA_TEMP1[1]);
                         SMB3_DATA_TEMP1[1] = (SMB3_DATA_TEMP1[1]&0x7F);
+                        //PD Controller does not automatically initiate and send swap to DFP requests to the farend device.
                         bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_01_Addr, TPS65988_CONTROL_CONFIG, &SMB3_DATA_TEMP1[0], 2, SMBus_NoPEC);
                     }
+#endif
+//T495XU0002: E+
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_PR_SWAP_Num:
                     //RamDebug(0xC0);
+                    //A Power role swap has completed.
                     if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_POWER_STATUS, SMB3_DATA_TEMP,bRead_I2C_NULL))
                     {
                         if(TPS65988_POWER_STATUS_SOURCE_SINK(SMB3_DATA_TEMP[0]))
                         {
+                            //Connection provides power (PD Controller as sink).
                             UCSI_POWER_SOURCE = 0;
                             Usb_Pdc_Power_Status.power_source = 0;
                         }
                         else
                         {
+                            //Connection requests power (PD Controller as source).
                             UCSI_POWER_SOURCE = 1;
                             Usb_Pdc_Power_Status.power_source = 1;
                         }
@@ -1408,15 +1326,17 @@ BOOL TypecPDProcess(BOOL verify)
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_DR_SWAP_Num:
+                    //A Data Role swap has completed.
                     if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_STATUS, SMB3_DATA_TEMP,bRead_I2C_NULL))
                     {
-                        //RamDebug(TPS65988_STATUS_DATA_ROLE(SMB3_DATA_TEMP[0]));
                         if(TPS65988_STATUS_DATA_ROLE(SMB3_DATA_TEMP[0]) == 1)
                         {
+                            //PD Controller is DFP.
                             UCSI_DATA_ROLE = 1;
                         }
                         else
                         {
+                            //PD Controller is UFP or port is disabled/disconnected.
                             UCSI_DATA_ROLE = 0;
                         }
                     }
@@ -1427,6 +1347,7 @@ BOOL TypecPDProcess(BOOL verify)
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_VDM_RECEIVED_Num:
+                    //A Vendor Defined Message has been received.
                     if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_RX_VDM, SMB3_DATA,bRead_I2C_NULL))
                     {
                         TypeCCommFailCnt++;
@@ -1438,6 +1359,7 @@ BOOL TypecPDProcess(BOOL verify)
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_NEW_CONTRACT_AS_CONS_Num:
+                    //An RDO from the far-end device has been accepted and the PD Controller is a Sink.
                     if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_ACTIVE_CONTRACT_RDO, SMB3_DATA_TEMP,bRead_I2C_NULL))
                     {
                         TypeCCommFailCnt++;
@@ -1456,9 +1378,25 @@ BOOL TypecPDProcess(BOOL verify)
                         //RamDebug(UCSI_RDO4);
                         UCSI_NEG_POWER_LEVEL_CHANGE = 1;
                     }
+//T495XU0002: S+  enable P2P function                    
+#if Support_Lenovo_P2P_V2P0
+                    PowerSourceSwitchDelay = 40;
+			        SET_MASK(TypeCStatus,TypeCAdpExist);
+		  			TypeCAdpPdStableCheck = 30;
+					CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Type);
+		  			if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
+		  			{
+		  			    RamDebug(0xB5);
+					    SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+						CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
+					}
+#endif
+//T495XU0002: E+
+					
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_NEW_CONTRACT_AS_PROV_Num:
+                    //An RDO from the far-end device has been accepted and the PD Controller is a Source.
                     if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_ACTIVE_CONTRACT_RDO, SMB3_DATA_TEMP,bRead_I2C_NULL))
                     {
                         TypeCCommFailCnt++;
@@ -1515,12 +1453,12 @@ BOOL TypecPDProcess(BOOL verify)
                         TypeCCommFailCnt = 0;
                         if(TPS65988_POWER_STATUS_POWER_CONNECTION(SMB3_DATA_TEMP[0]) == TPS65988_POWER_STATUS_TYPE_C_CONNECTION_CONNECTION)
                         {
-                            //connection
+                            //connection present
                                                          
                             if(0 != (TPS65988_POWER_STATUS_TYPE_C_CURRENT_MASK(SMB3_DATA_TEMP[0]) & TPS65988_POWER_STATUS_TYPE_C_CURRENT_PD_CONTRACT))
                             {
                                 /*
-                                *   Connection is present
+                                *   PD contract negotiated
                                 */
                                 if(TPS65988_POWER_STATUS_SOURCE_SINK(SMB3_DATA_TEMP[0]))
                                 {
@@ -1528,6 +1466,17 @@ BOOL TypecPDProcess(BOOL verify)
                                     *    USB PD act as Sink
                                     */
                                     SET_MASK(TypeCStatus,TypeCAdpExist);
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+                                    CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Type);
+					  			    if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
+					  			    {
+					  			        RamDebug(0xB6);
+										SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+										CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
+									}
+#endif
+//T495XU0002: E+
                                     if(UCSI_POWER_SOURCE)
                                     {
                                         //RamDebug(0x8D);
@@ -1541,6 +1490,28 @@ BOOL TypecPDProcess(BOOL verify)
                                 }
                                 else
                                 {
+                                    /*
+                                    *    USB PD act as Source
+                                    */
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+                                    SET_MASK(TypeCStatus3,TypeC_Laptop_Power_Type);
+					  			    if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Attached))
+					  			    {   
+					  			        RamDebug(0xB7);
+										CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+										CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
+					      		        SET_MASK(TypeCStatus3,NeedUpdateToPartner);
+							            CLEAR_MASK(TypeCStatus,TypeCAdpExist);
+							            CLEAR_MASK(TypeCStatus,TypeCAdpReady);
+							            TypeCAdpID = 0;
+							            CurrentTypeCWatt = 0;
+							            TypeCAdpPdStableCheck = 0;
+							            CurrentTypeCV = 0;
+							            CurrentTypeCI = 0;
+									}
+#endif
+//T495XU0002: E+
 
                                     if(!UCSI_POWER_SOURCE)
                                     {
@@ -1580,6 +1551,19 @@ BOOL TypecPDProcess(BOOL verify)
                             Port1CurrentTypeCV = 0;
                             Port1CurrentTypeCI = 0;
                             SendPdoSet(7,TYPECPort1);   // Switch PDO to max
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+                            CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Attached);
+    	  					CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Type);
+    	  					CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+    	  					CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+    	  					CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
+    	  					CLEAR_MASK(TypeCStatus3,GotPartnerInformation);
+    	  					AnoutherUnitInformation[0] = 0;
+    	  					AnoutherUnitInformation[1] = 0;
+							UCSI_P2P_Charge_Disable = 0;
+#endif
+//T495XU0002: E+
                         }
                     }
                     SET_MASK(TypeCStatus,TypeCProcessOK);
@@ -1593,11 +1577,13 @@ BOOL TypecPDProcess(BOOL verify)
                     {
                         if(TPS65988_DATA_USB2_CONNECT(SMB3_DATA_TEMP[0]) || TPS65988_DATA_USB3_CONNECT(SMB3_DATA_TEMP[0]))
                         {
+                            //USB2Connection or USB3Connection
                             Usb_Pdc_Status.connect_status = USB_CONNECT_CONNECTED;
                             RamDebug(0xC5);
                         }
                         if(TPS65988_DATA_DP_CONNECTION(SMB3_DATA_TEMP[1]))
                         {
+                            //DisplayPort connection
                             Usb_Pdc_Status.connect_status = USB_CONNECT_DP;
                             UCSI_CONNECTOR_CHANGE_STATUS[0] |= (UCSI_CONNECTOR_STATUS_CHANGE_SUPPORT_CAM | UCSI_CONNECTOR_STATUS_CHANGE_CONNECT);
                             RamDebug(0xC0);
@@ -1616,24 +1602,29 @@ BOOL TypecPDProcess(BOOL verify)
                         TypeCCommFailCnt = 0;
                         if(TPS65988_STATUS_PLUG_PRESENT(SMB3_DATA_TEMP[0]) == 1)
                         {
+                            //Plug present
                             Usb_Pdc_Status.device_connected = TRUE;
                             if(TPS65988_STATUS_DATA_ROLE(SMB3_DATA_TEMP[0]) == 1)
                             {
+                                //PD Controller is DFP.
                                 UCSI_DATA_ROLE = 1;
                             }
                             else
                             {
+                                //PD Controller is UFP or port is disabled/disconnected.
                                 UCSI_DATA_ROLE = 0;
                             }
                             if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_DATA_STATUS, SMB3_DATA_TEMP,bRead_I2C_NULL))
                             {
                                 if(TPS65988_DATA_USB2_CONNECT(SMB3_DATA_TEMP[0]) || TPS65988_DATA_USB3_CONNECT(SMB3_DATA_TEMP[0]))
                                 {
+                                    //USB2Connection or USB3Connection
                                     Usb_Pdc_Status.connect_status = USB_CONNECT_CONNECTED;
                                     RamDebug(0xC6);
                                 }
                                 if(TPS65988_DATA_DP_CONNECTION(SMB3_DATA_TEMP[1]))
                                 {
+                                    //DisplayPort connection
                                     Usb_Pdc_Status.connect_status = USB_CONNECT_DP;
                                     UCSI_CONNECTOR_CHANGE_STATUS[0] |= (UCSI_CONNECTOR_STATUS_CHANGE_SUPPORT_CAM | UCSI_CONNECTOR_STATUS_CHANGE_CONNECT);
                                     RamDebug(0xC1);
@@ -1642,6 +1633,7 @@ BOOL TypecPDProcess(BOOL verify)
                         }
                         else
                         {
+                            //No plug present.
                            //A485D000143--->Start
                             UnknowAdpRetry=0;//A485D000145:+
                             CLEAR_MASK(TypeCStatus,TypeCAdpExist);
@@ -1678,7 +1670,7 @@ BOOL TypecPDProcess(BOOL verify)
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_USER_VID_ALT_MODE_ENTERED_Num:
-			SET_MASK(TypeC_LenovoAdaptor, Port1_IslenovoAdaptor);//A485D000151+
+			        SET_MASK(TypeC_LenovoAdaptor, Port1_IslenovoAdaptor);//A485D000151+
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_USER_VID_ALT_MODE_EXITED_Num:
@@ -1734,7 +1726,7 @@ BOOL TypecPDProcess(BOOL verify)
                                     }
                                 }
                             }
-
+                            
                             if(((SMB3_DATA[1] == 0x44)&&(SMB3_DATA[2] == 0x81)) || (SMB3_DATA[1] == 0x06))  //0x44 for User VID Alt mode enter;0x06 for Lenovo Attention VDM
                             {
                                 //Send "Get Lenovo status" package
@@ -1746,7 +1738,6 @@ BOOL TypecPDProcess(BOOL verify)
                     SET_MASK(TypeCStatus,TypeCProcessOK);
                     break;
                 case TPS65988_INT_USER_VID_ALT_MODE_OTHER_VDM_Num:
-                    //  bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_RX_USER_VID_OTHER_VDM, &BiosReserved3E2,bRead_I2C_NULL);//A485D00075-
                     if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_RX_USER_VID_OTHER_VDM, SMB3_DATA,bRead_I2C_NULL))
                     {
                         TypeCCommFailCnt++;
@@ -1755,49 +1746,90 @@ BOOL TypecPDProcess(BOOL verify)
                     {
                         TypeCCommFailCnt = 0;
                         //Device's VDM infromation beging from Byte1,Byte0 is PDO length
-                        if((SMB3_DATA[4] == 0x17) && (SMB3_DATA[3] == 0xEF))    //Lenovo's USB-IF ID is "17EFh"
+                        if((SMB3_DATA[4] == 0x17) && (SMB3_DATA[3] == 0xEF))    //Lenovo's USB-IF ID is "17EFh"						
                         {
-                            OldDockingACKStatus = SMB3_DATA[5];
-                            OldDockingEvent = SMB3_DATA[8];
-                            OldVDO2[0] = SMB3_DATA[9];
-                            OldVDO2[1] = SMB3_DATA[10];
-                            OldVDO2[2] = SMB3_DATA[11];
-                            OldVDO2[3] = SMB3_DATA[12];
-                            if((SMB3_DATA[1]& 0x1F) == 0x10)
-                            {
-                                if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT)
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+				  		    if((SMB3_DATA[1] == 0x12)&&(SMB3_DATA[2] == 0xA0))
+				  		    {	
+				  		        //Get anouther unit information for P2P
+				  		        RamDebug(0xB9);
+	  							SET_MASK(TypeCStatus3,TypeC_Laptop_Attached);	//For EC wake from sleep mode.
+				  			    AnoutherUnitInformation[0] = SMB3_DATA[5];
+				  			    AnoutherUnitInformation[1] = SMB3_DATA[6];
+					  			SET_MASK(TypeCStatus3,GotPartnerInformation);
+                                SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+				  		    }
+	  					    else 
+#endif	
+//T495XU0002: E+ 					    
+	  					    if(IS_MASK_SET(TypeCStatus2,TypeC_Docking_Attached))
+	  					    {
+                                OldDockingACKStatus = SMB3_DATA[5];
+                                OldDockingEvent = SMB3_DATA[8];
+                                OldVDO2[0] = SMB3_DATA[9];
+                                OldVDO2[1] = SMB3_DATA[10];
+                                OldVDO2[2] = SMB3_DATA[11];
+                                OldVDO2[3] = SMB3_DATA[12];
+                                if((SMB3_DATA[1]& 0x1F) == 0x10)
                                 {
-                                    // Is WOL/Button action?
-                                    if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_WOL)
+                                    if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT)
                                     {
-                                        // Is WOL action?
-                                        if(IS_MASK_SET(u4Cfgspace2,DockingWOLEn))
+                                        // Is WOL/Button action?
+                                        if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_WOL)
                                         {
-                                            SET_MASK(TypeCStatus2,DockingEvent);
-                                            LanWakeLow();
+                                            // Is WOL action?
+                                            if(IS_MASK_SET(u4Cfgspace2,DockingWOLEn))
+                                            {
+                                                SET_MASK(TypeCStatus2,DockingEvent);
+                                                LanWakeLow();
+                                            }
                                         }
-                                    }
-                                    else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_MAKE))
-                                    {
-                                        // Is Button Make action?
-                                        PSWPressed();
-                                        // CMW20180323 + //A485D00083
-                                        if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
+                                        else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_MAKE))
                                         {
-                                            // Is Button Break at the same time?
-                                            DockingPSW_ActiveCnt = 11;
+                                            // Is Button Make action?
+                                            PSWPressed();
+                                            // CMW20180323 + //A485D00083
+                                            if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
+                                            {
+                                                // Is Button Break at the same time?
+                                                DockingPSW_ActiveCnt = 11;
+                                            }
                                         }
+                                        else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
+                                        {
+                                            // Is Button Break action?
+                                            PSWReleased();
+                                        }
+                                        SMB3_DATA[7] = SMB3_DATA[8];
+                                        SMB3_DATA[8] = 0x00;
+                                        SendPowerModeChangeToPdc();
                                     }
-                                    else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
-                                    {
-                                        // Is Button Break action?
-                                        PSWReleased();
-                                    }
-                                    SMB3_DATA[7] = SMB3_DATA[8];
-                                    SMB3_DATA[8] = 0x00;
-                                    SendPowerModeChangeToPdc();
                                 }
                             }
+//T495XU0002: S+  enable P2P function                         
+#if Support_Lenovo_P2P_V2P0
+                            if((SMB3_DATA[1] == 0x44) && (SMB3_DATA[2] == 0xA1))
+	  					    {
+        			          /*
+        			          *    Lenovo Laptop for P2P
+        			          */
+			                    RamDebug(0xB8);
+	  						    SET_MASK(TypeCStatus3,TypeC_Laptop_Attached);
+					            //SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Type);
+								CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+					            //SendUnitInformationToPdc();
+					            SET_MASK(TypeCStatus3,NeedUpdateToPartner);
+					            CLEAR_MASK(TypeCStatus,TypeCAdpExist);
+					            CLEAR_MASK(TypeCStatus,TypeCAdpReady);
+					            TypeCAdpID = 0;
+					            CurrentTypeCWatt = 0;
+					            TypeCAdpPdStableCheck = 0;
+					            CurrentTypeCV = 0;
+					            CurrentTypeCI = 0;
+	  					    }
+#endif
+//T495XU0002: E+
 
                             if(((SMB3_DATA[1] == 0x44)&&(SMB3_DATA[2] == 0x81)) || (SMB3_DATA[1] == 0x06))  //0x44 for User VID Alt mode enter;0x06 for Lenovo Attention VDM
                             {
@@ -1867,7 +1899,6 @@ BOOL TypecPDPort2Process(BOOL verify)
     if(Read_TYPEC_INT() || verify)
     {
         //Get Event number
-        //bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_INT_MASK2, tmpPDPort2INT,bRead_I2C_NULL);
         if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_INT_EVENT2, SMB3_DATA,bRead_I2C_NULL))
         {
             TypeCPort2CommFailCnt++;
@@ -1883,6 +1914,7 @@ BOOL TypecPDPort2Process(BOOL verify)
             TypeCPort2EventNum = TPS65988_INT_NO_EVENT_Num;
 //          if(TPS65988_INT_VDM_RECEIVED(SMB3_DATA[0]))
 //          {
+//              //A Vendor Defined Message has been received.
 //              SMB3_DATA[0] = 0x00;
 //              SMB3_DATA[1] = 0x08;    //Clear event bit
 //              SMB3_DATA[2] = 0x00;
@@ -1938,29 +1970,37 @@ BOOL TypecPDPort2Process(BOOL verify)
                 TypeCPort2CommFailCnt = 0;
             }
             //Process Event
-            //RamDebug(0x0F);
-            //RamDebug(TypeCPort2EventNum);
             switch(TypeCPort2EventNum)
             {
                 case TPS65988_INT_PLUG_INSERT_OR_REMOVAL_Num:
+//T495XU0002: S+  enable P2P function
+#if !Support_Lenovo_P2P_V2P0
                     if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_CONTROL_CONFIG, SMB3_DATA_TEMP1,bRead_I2C_NULL))
                     {
-                        //RamDebug(SMB3_DATA_TEMP1[1]);
+                        //RamDebug(SMB3_DATA_TEMP1[1]);                        
                         SMB3_DATA_TEMP1[1] = (SMB3_DATA_TEMP1[1]&0x7F);
+                        //PD Controller does not automatically initiate and send swap to DFP requests to the farend device.
                         bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_02_Addr, TPS65988_CONTROL_CONFIG, &SMB3_DATA_TEMP1[0], 2, SMBus_NoPEC);
                     }
+#endif
+//T495XU0002: E+
                     SET_MASK(TypeCPort2Status,TypeCProcessOK);
                     break;
                 case TPS65988_INT_PR_SWAP_Num:
+                    //A Power role swap has completed.
                     if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_POWER_STATUS, SMB3_DATA_TEMP,bRead_I2C_NULL))
                     {
                         if(TPS65988_POWER_STATUS_SOURCE_SINK(SMB3_DATA_TEMP[0]))
                         {
+                            //Connection provides power (PD Controller as sink).
                             UCSI_POWER_SOURCE2 = 0;
+                            Usb_Pdc_Power_Status2.power_source = 0;
                         }
                         else
                         {
+                            //Connection requests power (PD Controller as source).
                             UCSI_POWER_SOURCE2 = 1;
+                            Usb_Pdc_Power_Status2.power_source = 1;
                         }
                     }
 
@@ -1976,10 +2016,12 @@ BOOL TypecPDPort2Process(BOOL verify)
                         //RamDebug(TPS65988_STATUS_DATA_ROLE(SMB3_DATA_TEMP[0]));
                         if(TPS65988_STATUS_DATA_ROLE(SMB3_DATA_TEMP[0]) == 1)
                         {
+                            //PD Controller is DFP.
                             UCSI_DATA_ROLE2 = 1;
                         }
                         else
                         {
+                            //PD Controller is UFP or port is disabled/disconnected.
                             UCSI_DATA_ROLE2 = 0;
                         }
                     }
@@ -2001,6 +2043,7 @@ BOOL TypecPDPort2Process(BOOL verify)
                     SET_MASK(TypeCPort2Status,TypeCProcessOK);
                     break;
                 case TPS65988_INT_NEW_CONTRACT_AS_CONS_Num:
+                    //An RDO from the far-end device has been accepted and the PD Controller is a Sink.
                     if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_ACTIVE_CONTRACT_RDO, SMB3_DATA_TEMP,bRead_I2C_NULL))
                     {
                         TypeCPort2CommFailCnt++;
@@ -2019,9 +2062,24 @@ BOOL TypecPDPort2Process(BOOL verify)
                         //RamDebug(UCSI_RDO4_CONNECTOR2);
                         UCSI_NEG_POWER_LEVEL_CHANGE = 1;
                     }
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+                    PowerSourceSwitchDelay = 40;
+		            SET_MASK(TypeCStatus2,TypeCAdpExist);
+	  			    TypeCPort2AdpPdStableCheck = 30;
+					CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Type);
+		  			if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
+		  			{
+						SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+						CLEAR_MASK(TypeCPort2Status3,P2PPowerSwapWait);
+					}
+#endif
+//T495XU0002: E+              
+
                     SET_MASK(TypeCPort2Status,TypeCProcessOK);
                     break;
                 case TPS65988_INT_NEW_CONTRACT_AS_PROV_Num:
+                    //An RDO from the far-end device has been accepted and the PD Controller is a Source.
                     if(!bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_ACTIVE_CONTRACT_RDO, SMB3_DATA_TEMP,bRead_I2C_NULL))
                     {
                         TypeCPort2CommFailCnt++;
@@ -2040,6 +2098,8 @@ BOOL TypecPDPort2Process(BOOL verify)
                         //RamDebug(UCSI_RDO4_CONNECTOR2);
                         UCSI_NEG_POWER_LEVEL_CHANGE = 1;
                     }
+
+                    
                     SET_MASK(TypeCPort2Status,TypeCProcessOK);
                     break;
                 case TPS65988_INT_SOURCE_CAP_MSG_READY_Num:
@@ -2084,8 +2144,8 @@ BOOL TypecPDPort2Process(BOOL verify)
                             if(0 != (TPS65988_POWER_STATUS_TYPE_C_CURRENT_MASK(SMB3_DATA_TEMP[0]) & TPS65988_POWER_STATUS_TYPE_C_CURRENT_PD_CONTRACT))
                             {
                                 /*
-                                    *   Connection is present
-                                    */
+                                *   Connection is present
+                                */
                                 //RamDebug(0x82);
                                 if(TPS65988_POWER_STATUS_SOURCE_SINK(SMB3_DATA_TEMP[0]))
                                 {
@@ -2093,6 +2153,18 @@ BOOL TypecPDPort2Process(BOOL verify)
                                         *    USB PD act as Sink
                                         */
                                     SET_MASK(TypeCPort2Status,TypeCAdpExist);
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+                                    CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Type);
+    					  			if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
+    					  			{
+										SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+										CLEAR_MASK(TypeCPort2Status3,P2PPowerSwapWait);
+									}
+#endif   
+//T495XU0002: E+                           
+
+									
                                     if(UCSI_POWER_SOURCE2)
                                     {
                                         UCSI_POWER_SOURCE2 = 0;
@@ -2105,6 +2177,28 @@ BOOL TypecPDPort2Process(BOOL verify)
                                 }
                                 else
                                 {
+                                /*
+                                *   USB PD act as Source
+                                */
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+                                    SET_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Type);
+        				  			if(IS_MASK_SET(TypeCPort2Status3,TypeC_Laptop_Attached))
+        				  			{
+										CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+										CLEAR_MASK(TypeCPort2Status3,P2PPowerSwapWait);
+					      		        SET_MASK(TypeCPort2Status3,NeedUpdateToPartner);
+    							        CLEAR_MASK(TypeCPort2Status,TypeCAdpExist);
+    							        CLEAR_MASK(TypeCPort2Status,TypeCAdpReady);
+    							        TypeCPort2AdpID = 0;
+    							        Port2CurrentTypeCWatt = 0;
+    							        TypeCPort2AdpPdStableCheck = 0;
+    							        Port2CurrentTypeCV = 0;
+    							        Port2CurrentTypeCI = 0;
+									}
+#endif 
+//T495XU0002: E+                    
+
 
                                     if(!UCSI_POWER_SOURCE2)
                                     {
@@ -2144,6 +2238,20 @@ BOOL TypecPDPort2Process(BOOL verify)
                             TypeCPort2AdpPdStableCheck = 0;
                             Port2CurrentTypeCV = 0;
                             Port2CurrentTypeCI = 0;
+//T495XU0002: S+  enable P2P function                           
+#if Support_Lenovo_P2P_V2P0
+                            CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Attached);
+	  					    CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Type);
+	  					    CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
+	  					    CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+	  					    CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+	  					    CLEAR_MASK(TypeCPort2Status3,GotPartnerInformation);
+	  					    AnoutherUnitInformation2[0] = 0;
+	  					    AnoutherUnitInformation2[1] = 0;
+							UCSI_P2P_Charge_Disable = 0;
+							
+#endif
+//T495XU0002: E+
 
                             SendPdoSet(7,TYPECPort2);   // Switch PDO to max
                         }
@@ -2159,11 +2267,13 @@ BOOL TypecPDPort2Process(BOOL verify)
                     {
                         if(TPS65988_DATA_USB2_CONNECT(SMB3_DATA_TEMP[0]) || TPS65988_DATA_USB3_CONNECT(SMB3_DATA_TEMP[0]))
                         {
+                            //USB2Connection or USB3Connection
                             Usb_Pdc_Status2.connect_status = USB_CONNECT_CONNECTED;
                             RamDebug(0xC7);
                         }
                         if(TPS65988_DATA_DP_CONNECTION(SMB3_DATA_TEMP[1]))
                         {
+                            //DisplayPort connection
                             Usb_Pdc_Status2.connect_status = USB_CONNECT_DP;
                             UCSI_CONNECTOR_CHANGE_STATUS[1] |= (UCSI_CONNECTOR_STATUS_CHANGE_SUPPORT_CAM | UCSI_CONNECTOR_STATUS_CHANGE_CONNECT);
                             RamDebug(0xC2);
@@ -2184,10 +2294,12 @@ BOOL TypecPDPort2Process(BOOL verify)
                             Usb_Pdc_Status2.device_connected = TRUE;
                             if(TPS65988_STATUS_DATA_ROLE(SMB3_DATA_TEMP[0]) == 1)
                             {
+                                //PD Controller is DFP.
                                 UCSI_DATA_ROLE2 = 1;
                             }
                             else
                             {
+                                //PD Controller is UFP or port is disabled/disconnected.
                                 UCSI_DATA_ROLE2 = 0;
                             }
                             if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_DATA_STATUS, SMB3_DATA_TEMP,bRead_I2C_NULL))
@@ -2317,46 +2429,88 @@ BOOL TypecPDPort2Process(BOOL verify)
                         //Device's VDM infromation beging from Byte1,Byte0 is PDO length
                         if((SMB3_DATA[4] == 0x17) && (SMB3_DATA[3] == 0xEF))    //Lenovo's USB-IF ID is "17EFh"
                         {
-                            OldDockingACKStatus = SMB3_DATA[5];
-                            OldDockingEvent = SMB3_DATA[8];
-                            OldVDO2[0] = SMB3_DATA[9];
-                            OldVDO2[1] = SMB3_DATA[10];
-                            OldVDO2[2] = SMB3_DATA[11];
-                            OldVDO2[3] = SMB3_DATA[12];
-                            if((SMB3_DATA[1]& 0x1F) == 0x10)
-                            {
-                                if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT)
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0                        
+                            if((SMB3_DATA[1] == 0x12)&&(SMB3_DATA[2] == 0xA0))
+				  		    {	//Get anouther unit information for P2P
+	  							SET_MASK(TypeCPort2Status3,TypeC_Laptop_Attached);	//For EC wake from sleep mode.
+				  			    AnoutherUnitInformation2[0] = SMB3_DATA[5];
+				  			    AnoutherUnitInformation2[1] = SMB3_DATA[6];
+					  			SET_MASK(TypeCPort2Status3,GotPartnerInformation);
+                                SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+//					  			if(IS_MASK_SET(TypeCPort2Status3,NeedUpdateToPartner))
+//					  			{
+//					  			    CLEAR_MASK(TypeCPort2Status3,NeedUpdateToPartner);
+//							        SendUnitInformationToPdc();
+//							    }
+				  		    }
+	  					    else 
+#endif
+//T495XU0002: E+
+	  					    if(IS_MASK_SET(TypeCPort2Status2,TypeC_Docking_Attached))
+	  					    {
+                                OldDockingACKStatus = SMB3_DATA[5];
+                                OldDockingEvent = SMB3_DATA[8];
+                                OldVDO2[0] = SMB3_DATA[9];
+                                OldVDO2[1] = SMB3_DATA[10];
+                                OldVDO2[2] = SMB3_DATA[11];
+                                OldVDO2[3] = SMB3_DATA[12];
+                                if((SMB3_DATA[1]& 0x1F) == 0x10)
                                 {
-                                    // Is WOL/Button action?
-                                    if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_WOL)
+                                    if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT)
                                     {
-                                        // Is WOL action?
-                                        if(IS_MASK_SET(u4Cfgspace2,DockingWOLEn))
+                                        // Is WOL/Button action?
+                                        if(SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_WOL)
                                         {
-                                            SET_MASK(TypeCPort2Status2,DockingEvent);
-                                            LanWakeLow();
+                                            // Is WOL action?
+                                            if(IS_MASK_SET(u4Cfgspace2,DockingWOLEn))
+                                            {
+                                                SET_MASK(TypeCPort2Status2,DockingEvent);
+                                                LanWakeLow();
+                                            }
                                         }
-                                    }
-                                    else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_MAKE))
-                                    {
-                                        // Is Button Make action?
-                                        PSWPressed();
-                                        // CMW20180323 + //A485D00083
-                                        if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
+                                        else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_MAKE))
                                         {
-                                            // Is Button Break at the same time?
-                                            DockingPSW_ActiveCnt = 11;
+                                            // Is Button Make action?
+                                            PSWPressed();
+                                            // CMW20180323 + //A485D00083
+                                            if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
+                                            {
+                                                // Is Button Break at the same time?
+                                                DockingPSW_ActiveCnt = 11;
+                                            }
+                                            // CMW20180323 - //A485D00082
                                         }
-                                        // CMW20180323 - //A485D00082
-                                    }
-                                    else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
-                                    {
-                                        // Is Button Break action?
-                                        PSWReleased();
+                                        else if((SMB3_DATA[8] & TYPE_C_DOCKING_EVENT_BUTTON_BREAK))
+                                        {
+                                            // Is Button Break action?
+                                            PSWReleased();
+                                        }
                                     }
                                 }
                             }
-
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+                            if((SMB3_DATA[1] == 0x44) && (SMB3_DATA[2] == 0xA1))
+	  					    {
+        			          /*
+        			          *    Lenovo Laptop for P2P
+        			          */
+	  						    SET_MASK(TypeCPort2Status3,TypeC_Laptop_Attached);
+					            //SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type);
+								CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+					            //SendUnitInformationToPdc();
+					            SET_MASK(TypeCPort2Status3,NeedUpdateToPartner);
+					            CLEAR_MASK(TypeCPort2Status,TypeCAdpExist);
+					            CLEAR_MASK(TypeCPort2Status,TypeCAdpReady);
+					            TypeCPort2AdpID = 0;
+					            Port2CurrentTypeCWatt = 0;
+					            TypeCPort2AdpPdStableCheck = 0;
+					            Port2CurrentTypeCV = 0;
+					            Port2CurrentTypeCI = 0;
+	  					    }
+#endif
+//T495XU0002: E+
                             if(((SMB3_DATA[1] == 0x44)&&(SMB3_DATA[2] == 0x81)) || (SMB3_DATA[1] == 0x06))  //0x44 for User VID Alt mode enter;0x06 for Lenovo Attention VDM
                             {
                                 //Send "Get Lenovo status" package
@@ -2567,7 +2721,6 @@ void OEM_TYPE_C_Hook_PDMonitor(void)
 */
 void OEM_TYPE_C_HOOK(void)
 {
-    //if( bITETestVar5 == 0x00)  //David- add for code debug
     // CMW20180323 +  //A485D00083
     if(!Read_PM_PWRBTN())
     {
@@ -2594,10 +2747,14 @@ void OEM_TYPE_C_HOOK(void)
             OEM_TYPE_C_init_hook();
         }
         if(IS_MASK_SET(TypeCStatus,TypeCIniOK))
-        {
+        {            
             TypecPDProcess(FALSE);
             DetectAdaptorWatt();
-            //P2P_Process();
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+            P2P_Process();
+#endif	
+//T495XU0002: E+		
         }
         else
         {
@@ -2607,7 +2764,11 @@ void OEM_TYPE_C_HOOK(void)
         {
             TypecPDPort2Process(FALSE);
             DetectPort2AdaptorWatt();
-            // P2P_Process_Port2();
+//T495XU0002: S+  enable P2P function
+#if Support_Lenovo_P2P_V2P0
+            P2P_Process_Port2();
+#endif
+//T495XU0002: E+			
         }
         else
         {
@@ -3319,7 +3480,7 @@ void SendPdoSet(BYTE PDOSetNum,BYTE PortNum)
 *       none
 *******************************************************************************
 */
-#if 0
+#if Support_Lenovo_P2P_V2P0
 void P2P_Process(void)
 {
     BYTE i,UnitARSOCTemp,UnitASxTemp;
@@ -3468,7 +3629,6 @@ void P2P_Process(void)
             }
             else
             {
-                //RTS5455WaitPingDelay=20;
                 CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
                 if(IS_MASK_CLEAR(TypeCStatus2,TypeC_Laptop_Power_Charge_Status) != IS_MASK_CLEAR(TypeCStatus3,TypeC_Laptop_Power_Charge_Target))
                 {
@@ -3494,7 +3654,6 @@ void P2P_Process(void)
     else
     {
         //This unit is Source side
-        //RTS5455WaitPingDelay=20;
         CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
         SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
         CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
@@ -3918,14 +4077,14 @@ void SendUnitInformationToPdc_Port2(void)
 //A485D000116: Add unsupport adapter process,set flag for bios,close ac in
 void SinkPowerPathControl(BYTE OnOff,BYTE portID)
 {
-    BYTE i;
-    if((IS_MASK_CLEAR(TypeCStatus,TypeCIniOK)&&IS_MASK_CLEAR(TypeCPort2Status,TypeCIniOK))
-       //|| (IS_MASK_CLEAR(TypeCStatus3,TypeC_Laptop_Attached)&&IS_MASK_CLEAR(TypeCPort2Status3,TypeC_Laptop_Attached))
-       || IS_MASK_SET(PDStatus,TypeCFwUpdating)
-      )
-    {
-        return;
-    }
+	BYTE i;
+	if((IS_MASK_CLEAR(TypeCStatus,TypeCIniOK)&&IS_MASK_CLEAR(TypeCPort2Status,TypeCIniOK))
+	|| (IS_MASK_CLEAR(TypeCStatus3,TypeC_Laptop_Attached)&&IS_MASK_CLEAR(TypeCPort2Status3,TypeC_Laptop_Attached))
+	|| IS_MASK_SET(PDStatus,TypeCFwUpdating)
+	)
+	{
+		return;
+	}
     if(portID == TYPECPort1)
     {
         if(IS_MASK_SET(TypeCStatus3,TypeC_Laptop_Power_Type))
@@ -3957,24 +4116,6 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
                 TypeCCommFailCnt = 0;
             }
             Send4ccCmd(TPS65988_4CC_CMD_SEND_VDM,TYPECPort1);
-            //      SMB3_DATA[0] = RTS5455_SEND_VDM & 0x00FF;
-            //      SMB3_DATA[1] = RTS5455_PORT_NUM;
-            //      if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_Addr, (RTS5455_SEND_VDM>>8), &SMB3_DATA[0], 10, SMBus_NoPEC))
-            //      {
-            //          TypeCCommFailCnt++;
-            //      }
-            //      else
-            //      {
-            //          TypeCCommFailCnt = 0;
-            //        if(OnOff)
-            //        {
-            //              SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
-            //        }
-            //        else
-            //        {
-            //              CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
-            //        }
-            //      }
         }
         else
         {
@@ -3982,6 +4123,25 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
             if(OnOff)
             {
                 //Turn on Type-C VBus power
+//T495XU0002: S+  enable P2P function
+                if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, SMB3_DATA_TEMP,bRead_I2C_NULL))
+                {
+                    RamDebug(0xBB);
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    //011b:PP3 configured for Sink (input), but will wait for SYS_RDY command(SRDY) before closing the switch.
+                    SMB3_DATA_TEMP[4] |= 0x03;
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_01_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, &SMB3_DATA_TEMP[0], 14, SMBus_NoPEC))
+        			{
+        				TypeCCommFailCnt++;
+        			}
+        			else
+        			{
+        			  TypeCCommFailCnt = 0;
+        			}
+                }
+//T495XU0002: E+
+                
                 SMB3_DATA[0] = 0x02;
                 if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_01_Addr, TPS65988_DATA1, &SMB3_DATA[0], 01, SMBus_NoPEC))
                 {
@@ -3993,6 +4153,25 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
                 }
                 Send4ccCmd(TPS65988_4CC_CMD_TURN_ON_INPUT_PATH,TYPECPort1);
                 SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
+//T495XU0002: S+  enable P2P function
+                if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_01_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, SMB3_DATA_TEMP,bRead_I2C_NULL))
+                {
+                    RamDebug(0xBB);
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    //010b:PP3 configured for Sink (input)
+                    SMB3_DATA_TEMP[4] &= 0xFC;
+                    SMB3_DATA_TEMP[4] |= 0x02;
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_01_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, &SMB3_DATA_TEMP[0], 14, SMBus_NoPEC))
+        			{
+        				TypeCCommFailCnt++;
+        			}
+        			else
+        			{
+        			  TypeCCommFailCnt = 0;
+        			}
+                }
+//T495XU0002: E+ 
             }
             else
             {
@@ -4000,21 +4179,6 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
                 Send4ccCmd(TPS65988_4CC_CMD_TURN_OFF_INPUT_PATH,TYPECPort1);
                 CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
             }
-            //      SMB3_DATA[0] = RTS5455_ENABLE_DISABLE_SINK & 0x00FF;
-            //      SMB3_DATA[1] = RTS5455_PORT_NUM;
-            //          SMB3_DATA[2] = 0;
-            //    if(OnOff)
-            //    {
-            //          SMB3_DATA[2] |= 0x01;
-            //    }
-            //      if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_Addr, (RTS5455_ENABLE_DISABLE_SINK>>8), &SMB3_DATA[0], RTS5455_ENABLE_DISABLE_SINK_LEN, SMBus_NoPEC))
-            //      {
-            //          TypeCCommFailCnt++;
-            //      }
-            //      else
-            //      {
-            //          TypeCCommFailCnt = 0;
-            //      }
         }
     }
     else if(portID == TYPECPort2)
@@ -4051,24 +4215,6 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
                 TypeCPort2CommFailCnt = 0;
             }
             Send4ccCmd(TPS65988_4CC_CMD_SEND_VDM,TYPECPort2);
-            //      SMB3_DATA[0] = RTS5455_SEND_VDM & 0x00FF;
-            //      SMB3_DATA[1] = RTS5455_PORT_NUM;
-            //      if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_Addr, (RTS5455_SEND_VDM>>8), &SMB3_DATA[0], 10, SMBus_NoPEC))
-            //      {
-            //          TypeCCommFailCnt++;
-            //      }
-            //      else
-            //      {
-            //          TypeCCommFailCnt = 0;
-            //        if(OnOff)
-            //        {
-            //              SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
-            //        }
-            //        else
-            //        {
-            //              CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
-            //        }
-            //      }
         }
         else
         {
@@ -4079,6 +4225,25 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
             if(OnOff)
             {
                 //Turn on Type-C VBus power
+//T495XU0002: S+  enable P2P function
+                if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, SMB3_DATA_TEMP,bRead_I2C_NULL))
+                {
+                    RamDebug(0xBC);
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    //011b:PP3 configured for Sink (input), but will wait for SYS_RDY command(SRDY) before closing the switch.
+                    SMB3_DATA_TEMP[4] |= 0x03;
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_02_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, &SMB3_DATA_TEMP[0], 14, SMBus_NoPEC))
+        			{
+        				TypeCCommFailCnt++;
+        			}
+        			else
+        			{
+        			  TypeCCommFailCnt = 0;
+        			}
+                }
+//T495XU0002: E+
+                
                 SMB3_DATA[0] = 0x02;
                 if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_02_Addr, TPS65988_DATA2, &SMB3_DATA[0], 01, SMBus_NoPEC))
                 {
@@ -4090,6 +4255,25 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
                 }
                 Send4ccCmd(TPS65988_4CC_CMD_TURN_ON_INPUT_PATH,TYPECPort2);
                 SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+//T495XU0002: S+  enable P2P function
+                if(bRSMBusBlock(chSMB_TYPEC, SMbusRBK, TypeC_02_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, SMB3_DATA_TEMP,bRead_I2C_NULL))
+                {
+                    RamDebug(0xBC);
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    //010b:PP3 configured for Sink (input)
+                    SMB3_DATA_TEMP[4] &= 0xFC;
+                    SMB3_DATA_TEMP[4] |= 0x02;
+                    RamDebug(SMB3_DATA_TEMP[4]);
+                    if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_02_Addr, TPS65988_GLOBAL_SYSTEM_CONFIG, &SMB3_DATA_TEMP[0], 14, SMBus_NoPEC))
+        			{
+        				TypeCCommFailCnt++;
+        			}
+        			else
+        			{
+        			  TypeCCommFailCnt = 0;
+        			}
+                }
+//T495XU0002: E+
             }
             else
             {
@@ -4097,21 +4281,6 @@ void SinkPowerPathControl(BYTE OnOff,BYTE portID)
                 Send4ccCmd(TPS65988_4CC_CMD_TURN_OFF_INPUT_PATH,TYPECPort2);
                 CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
             }
-            //      SMB3_DATA[0] = RTS5455_ENABLE_DISABLE_SINK & 0x00FF;
-            //      SMB3_DATA[1] = RTS5455_PORT_NUM;
-            //          SMB3_DATA[2] = 0;
-            //    if(OnOff)
-            //    {
-            //          SMB3_DATA[2] |= 0x01;
-            //    }
-            //      if(!bWSMBusBlock(chSMB_TYPEC, SMbusWBK, TypeC_Addr, (RTS5455_ENABLE_DISABLE_SINK>>8), &SMB3_DATA[0], RTS5455_ENABLE_DISABLE_SINK_LEN, SMBus_NoPEC))
-            //      {
-            //          TypeCCommFailCnt++;
-            //      }
-            //      else
-            //      {
-            //          TypeCCommFailCnt = 0;
-            //      }
         }
     }
 }
@@ -6068,10 +6237,6 @@ void SetMultiPortSNK(BYTE portNum)
     else
     {
         tmpCOMFailFlag = 0;
-
-        //RamDebug(0xCC);
-        //RamDebug(SMB3_DATA[12]);
-        //RamDebug(0xCC);
         if(UCSI_RelativeStateOfChg > PD_SWITCH_BATTERY_CAPA_THERSHOLD)
         {
             if((SMB3_DATA[12]&0x03) == 0x02)
@@ -6125,5 +6290,6 @@ void SetMultiPortSNK(BYTE portNum)
             TypeCPort2CommFailCnt = 0;
     }
 }
+
 
 #endif //Support_TYPE_C

@@ -130,7 +130,7 @@ void SmbSlvRead(void)
     	state = DASH_SLSTA;
     	if(!(state & I2C_SLV_STATE_INTRS))		//if no interrupts, continue.
         { 
-       RamDebug(0xD2);     
+       		RamDebug(0xD2);     
     		continue;
     	} 
     	DASH_SLSTA = state;

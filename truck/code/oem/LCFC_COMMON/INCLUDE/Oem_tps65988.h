@@ -46,7 +46,7 @@
 *     #EC ram define
 *********************************************************
 */
-#define  TypeCStatus          					TYPE_C_RAM0             //_at_ OEMRAM4+0x70;	//Bit2~bit0:Step
+#define  TypeCStatus          					TYPE_C_RAM0             //_at_ OEMRAM8+0x50;	//Bit2~bit0:Step
  #define     TypeCAdpAuthing   			BIT0
  #define     TypeCAdpAuthDone  			BIT1
  #define     TypeCAdpAuthPass  			BIT2
@@ -56,34 +56,41 @@
  #define     TypeCProcessOK    			BIT6
  #define     TypeCIniOK        			BIT7
  
-#define  TypeCIniDelay         					TYPE_C_RAM1             //_at_ OEMRAM4+0x71;
-#define  TypeCEventNum         					TYPE_C_RAM2             //_at_ OEMRAM4+0x72;
-#define  TypeCCommFailCnt      					TYPE_C_RAM3             //_at_ OEMRAM4+0x73;
-#define  TypeCAdpID            					TYPE_C_RAM4             //_at_ OEMRAM4+0x74;
-#define  CurrentTypeCWatt      					TYPE_C_RAM5             //_at_ OEMRAM4+0x75;
-#define  TypeCAdpPdStableCheck 					TYPE_C_RAM6             //_at_ OEMRAM4+0x76;
-#define  TypeCProcessStep      					TYPE_C_RAM7             //_at_ OEMRAM4+0x77;
-#define  PDStatus	             				TYPE_C_RAM8             //_at_ OEMRAM4+0x78;
+#define  TypeCIniDelay         					TYPE_C_RAM1             //_at_ OEMRAM8+0x51;
+#define  TypeCEventNum         					TYPE_C_RAM2             //_at_ OEMRAM8+0x52;
+#define  TypeCCommFailCnt      					TYPE_C_RAM3             //_at_ OEMRAM8+0x53;
+#define  TypeCAdpID            					TYPE_C_RAM4             //_at_ OEMRAM8+0x54;
+#define  CurrentTypeCWatt      					TYPE_C_RAM5             //_at_ OEMRAM8+0x55;
+#define  TypeCAdpPdStableCheck 					TYPE_C_RAM6             //_at_ OEMRAM8+0x56;
+#define  TypeCProcessStep      					TYPE_C_RAM7             //_at_ OEMRAM8+0x57;
+#define  PDStatus	             				TYPE_C_RAM8             //_at_ OEMRAM8+0x58;
 // #define 		CurrentDEV_INTR		BIT0
 // #define 		CurrentPORT0_INTR	BIT1
 // #define 		CurrentPORT1_INTR	BIT2
  #define     TypeCFwUpdating   			BIT7
  #define    TypeC4CCCmd                         BIT5        //A485D000154+
  
-#define  LimitedSupportAdpWattUpper				TYPE_C_RAM9              //_at_ OEMRAM4+0x79;
-#define  CurrentTypeCV         					TYPE_C_RAM10             //_at_ OEMRAM4+0x7A;  word
-#define  CurrentTypeCI         					TYPE_C_RAM11             //_at_ OEMRAM4+0x7C;  word
-#define  TypeCStatus2							TYPE_C_RAM12             //_at_ OEMRAM4+0x7E;
+#define  LimitedSupportAdpWattUpper				TYPE_C_RAM9              //_at_ OEMRAM8+0x59;
+#define  CurrentTypeCV         					TYPE_C_RAM10             //_at_ OEMRAM8+0x5A;  word
+#define  CurrentTypeCI         					TYPE_C_RAM11             //_at_ OEMRAM8+0x5C;  word
+#define  TypeCStatus2							TYPE_C_RAM12             //_at_ OEMRAM8+0x5E;
  #define    ClassicAdpDetachShutdown   	BIT0
  #define    DockingEvent				BIT1
  #define    TypeC_Docking_Attached	   	BIT2
  #define    TypeC_ChipOff	   			BIT3
  #define    PdcRequestDone             	BIT4
  #define    TypeC_Dead_Battery_Mode	   	BIT5	//1:Dead battery mode;0:non-dead battery mode
+
+
+#if Support_Lenovo_P2P_V2P0
 #define    TypeC_Laptop_Power_Type_Target          BIT6    //1:Source,0:Sink
 #define    TypeC_Laptop_Power_Charge_Status        BIT7    //1:Charge,0:Don't charge
+#endif
 
-#define  TypeCStatus3					TYPE_C_RAM14             //_at_ OEMRAM4+0x7E;
+#define  UnknowAdpWatt					 		TYPE_C_RAM13             //_at_ OEMRAM8+0x5F;
+
+#if Support_Lenovo_P2P_V2P0
+#define  TypeCStatus3					TYPE_C_RAM14             //_at_ OEMRAM8+0x60;
  #define    NeedUpdateToPartner   	BIT0
  #define    AllEventsNotClear	   	BIT1
  #define    GotPartnerInformation   	BIT2
@@ -92,43 +99,51 @@
  #define    TypeC_Laptop_Power_Charge_Target	   	BIT5	//1:Charge,0:Don't charge
  #define    TypeC_Laptop_Power_Type	   	        BIT6	//1:Dead battery mode;0:non-dead battery mode
  #define    Cmd_4CC_Completed	   	        BIT7
+#endif
+ 
 
-#define  UnknowAdpWatt					 		TYPE_C_RAM13             //_at_ OEMRAM4+0x7F;
-
-#define  PowerSourceSwitchDelay	 				TYPE_C_RAM33	//Type-C power source switch command delay for three port
-#define  AnoutherUnitInformation	    TYPE_C_RAM35    //_at_ OEMRAM4+0x19;0x19~0x1A
-#define  AnoutherUnitInformation2	    TYPE_C_RAM36    //_at_ OEMRAM4+0x19;0x19~0x1A
-
-#define  TypeCPort2Status          				TYPE_C_RAM17             //_at_ OEMRAM4+0x88;	//Bit2~bit0:Step
+#define  TypeCPort2Status          				TYPE_C_RAM17             //_at_ OEMRAM8+0x62;	//Bit2~bit0:Step
  #define     TypeCProcessOK    			BIT6
  #define     TypeCIniOK        			BIT7
  
-#define	 TypeCPort2IniDelay         			TYPE_C_RAM18             //_at_ OEMRAM4+0x89;	
-#define  TypeCPort2ProcessStep      			TYPE_C_RAM19             //_at_ OEMRAM4+0x8A;
-#define  TypeCPort2CommFailCnt      			TYPE_C_RAM20             //_at_ OEMRAM4+0x8B;
-#define  TypeCPort2EventNum         			TYPE_C_RAM21             //_at_ OEMRAM4+0x8C;
-#define  TypeCPort2AdpPdStableCheck 			TYPE_C_RAM22             //_at_ OEMRAM4+0x8D;
+#define	 TypeCPort2IniDelay         			TYPE_C_RAM18             //_at_ OEMRAM8+0x63;	
+#define  TypeCPort2ProcessStep      			TYPE_C_RAM19             //_at_ OEMRAM8+0x64;
+#define  TypeCPort2CommFailCnt      			TYPE_C_RAM20             //_at_ OEMRAM8+0x65;
+#define  TypeCPort2EventNum         			TYPE_C_RAM21             //_at_ OEMRAM8+0x66;
+#define  TypeCPort2AdpPdStableCheck 			TYPE_C_RAM22             //_at_ OEMRAM8+0x67;
 
-#define  Port2CurrentTypeCV         			TYPE_C_RAM23             //_at_ OEMRAM4+0x7A;  word
-#define  Port2CurrentTypeCI         			TYPE_C_RAM24             //_at_ OEMRAM4+0x7C;  word
-#define  TypeCPort2Status2						TYPE_C_RAM25             //_at_ OEMRAM4+0x7E;
+#define  Port2CurrentTypeCV         			TYPE_C_RAM23             //_at_ OEMRAM8+0x68;  word
+#define  Port2CurrentTypeCI         			TYPE_C_RAM24             //_at_ OEMRAM8+0x6A;  word
+#define  TypeCPort2Status2						TYPE_C_RAM25             //_at_ OEMRAM8+0x6C;
  #define    ClassicAdpDetachShutdown   	BIT0
  #define    DockingEvent				BIT1
  #define    TypeC_Docking_Attached	   	BIT2
  #define    TypeC_ChipOff	   			BIT3
  #define    PdcRequestDone             	BIT4
  #define    TypeC_Dead_Battery_Mode	   	BIT5	//1:Dead battery mode;0:non-dead battery mode
- 
- #define  TypeCPort2Status3					TYPE_C_RAM34             //_at_ OEMRAM4+0x7E;
+
 
 #define	 TypeCPort2AdpID						TYPE_C_RAM26
 #define	 Port2CurrentTypeCWatt					TYPE_C_RAM27
 ////A485D00080
 #define  TypeCAdpDetectDelay					TYPE_C_RAM29
 #define  UnknowAdpRetry                         TYPE_C_RAM30
-#define  TypeCPort2AdpDetectDelay					TYPE_C_RAM31
-#define  Port2UnknowAdpRetry                         TYPE_C_RAM32
+#define  TypeCPort2AdpDetectDelay			    TYPE_C_RAM31
+#define  Port2UnknowAdpRetry                    TYPE_C_RAM32
 //A485D00080
+
+#if Support_Lenovo_P2P_V2P0
+#define  PowerSourceSwitchDelay	 				TYPE_C_RAM33	//Type-C power source switch command delay for three port
+#define  TypeCPort2Status3					    TYPE_C_RAM34      
+
+#define  AnoutherUnitInformation	            TYPE_C_RAM35    
+#define  AnoutherUnitInformation2	            TYPE_C_RAM36    
+#define  OldInformation	                        TYPE_C_RAM37
+#define  OldInformation2	                    TYPE_C_RAM38
+#endif
+
+#define  DockingPSW_ActiveCnt					TYPE_C_RAM40             
+
 
 #define  Port_Select							TYPE_C_RAM41
 #define TypeCPort1AdpID				TYPE_C_RAM42
@@ -145,12 +160,9 @@
 #define PD_SWITCH_BATTERY_CAPA_THERSHOLD		(7)
 
 
-#define  OldDockingACKStatus					TYPE_C_DOCKING_RAM0             //_at_ OEMRAM5+0x85;
-#define  OldDockingEvent						TYPE_C_DOCKING_RAM1             //_at_ OEMRAM5+0x86;
-#define  OldVDO2								TYPE_C_DOCKING_RAM2             //_at_ OEMRAM5+0x87;0x87~0x8A
-#define  OldInformation	                        TYPE_C_RAM37
-#define  OldInformation2	                    TYPE_C_RAM38
-#define DockingPSW_ActiveCnt					TYPE_C_RAM40             //_at_ OEMRAM4+0x60		// CMW20180323
+#define  OldDockingACKStatus					TYPE_C_DOCKING_RAM0             //_at_ OEMRAM8+0x70;
+#define  OldDockingEvent						TYPE_C_DOCKING_RAM1             //_at_ OEMRAM8+0x71;
+#define  OldVDO2								TYPE_C_DOCKING_RAM2             //_at_ OEMRAM8+0x72;0x72~0x75
 
 #if PD_ENABLE_COMMFAIL_RESET //A485D000114: add PD communication fail reset function
 #define  Port1MonitorFailCnt                            TYPE_C_RAM48
@@ -1527,9 +1539,16 @@ extern BYTE UsbPdcRequest(BYTE usb_pdc_id, USB_PDC_REQ *request_packet, BYTE cmd
 extern void UsbPdcGetDataRole(BYTE usb_pdc_id);
 extern void UsbPdcGetPowerRole(BYTE usb_pdc_id);
 extern void SendPDO20VTo9V(BYTE portNUM);
+
+#if Support_Lenovo_P2P_V2P0 
+extern void P2P_Process(void);
 extern void P2P_Process_Port2(void);
-extern void SendPDO9VTo20V(BYTE portNUM);
+extern void SendUnitInformationToPdc(void);
 extern void SendUnitInformationToPdc_Port2(void);
+extern void SinkPowerPathControl(BYTE OnOff,BYTE PortID);
+#endif
+
+extern void SendPDO9VTo20V(BYTE portNUM);
 extern void SinkPowerPathControl(BYTE OnOff,BYTE PortID);
 extern void TPS65988_SelectAdapterPort(void);
 extern void SetMultiPortSNK(BYTE portNum);
