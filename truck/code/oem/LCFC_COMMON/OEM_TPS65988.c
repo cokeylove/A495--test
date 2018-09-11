@@ -3483,7 +3483,7 @@ void SendPdoSet(BYTE PDOSetNum,BYTE PortNum)
 #if Support_Lenovo_P2P_V2P0
 void P2P_Process(void)
 {
-    BYTE i,UnitARSOCTemp,UnitASxTemp;
+    BYTE i,UnitARSOCTemp,UnitASxTemp,UnitAACTemp; 
     WORD RemainCap1,RemainCap2;
     WORD FullChgCap1,FullChgCap2;
     DWORD RelativeStateOfChg;
@@ -3523,6 +3523,7 @@ void P2P_Process(void)
         {
             UnitARSOCTemp = AnoutherUnitInformation[0] & 0x7F;
             UnitASxTemp = ((AnoutherUnitInformation[1]&0x03) << 1) + (AnoutherUnitInformation[0] >> 7);
+            UnitAACTemp = (AnoutherUnitInformation[1]>>2)&0x01;//T495XU0004: add 
             //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
  //           if(((i == 1) && (UnitASxTemp == 0))
  //              || ((i != 1) && (UnitASxTemp != 0))
@@ -3530,47 +3531,70 @@ void P2P_Process(void)
  //           {
                 //Two units both are in Non-S0 or S0.
             //E+
-            if(UnitARSOCTemp >= UCSI_RelativeStateOfChg)
-            {
-                if(UnitARSOCTemp > 30)
+
+
+            //T495XU0004£º S+ AC system charge DC system for P2P V2.0
+            if((CurrentTypeCWatt >= 0x2d) && (UnitAACTemp == 1))
+			{
+                CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
+                CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+			}
+			else if((CurrentTypeCWatt >= 0x2d) && (UnitAACTemp == 0))
+			{
+                SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+			}
+			else if(UnitAACTemp == 1)
+			{
+                SET_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target); 
+                CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+			}
+			else if(UnitAACTemp == 0)
+			{
+                if(UnitARSOCTemp >= UCSI_RelativeStateOfChg)
                 {
-                    CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
-                    if((UnitARSOCTemp - UCSI_RelativeStateOfChg) < 3)      //T495XU0003: 20% change to 3% gap for P2P V2.0
+                    if(UnitARSOCTemp > 30)
                     {
-                        CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
+                        CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+                        if((UnitARSOCTemp - UCSI_RelativeStateOfChg) < 3)      //T495XU0003: 20% change to 3% gap for P2P V2.0
+                        {
+                            CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
+                        }
+                        else
+                        {
+                            SET_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
+                        }
                     }
                     else
-                    {
-                        SET_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
-                    }
-                }
-                else
-                {
-                    CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
-                    CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
-                }
-
-            }
-            else
-            {
-                if(UCSI_RelativeStateOfChg > 30)
-                {
-                    if((UCSI_RelativeStateOfChg - UnitARSOCTemp) < 3)     //T495XU0003: 20% change to 3% gap for P2P V2.0
                     {
                         CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
                         CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
                     }
-                    else
-                    {
-                        SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
-                    }
+
                 }
                 else
                 {
-                    CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
-                    CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+                    if(UCSI_RelativeStateOfChg > 30)
+                    {
+                        if((UCSI_RelativeStateOfChg - UnitARSOCTemp) < 3)     //T495XU0003: 20% change to 3% gap for P2P V2.0
+                        {
+                            CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
+                            CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+                        }
+                        else
+                        {
+                            SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+                        }
+                    }
+                    else
+                    {
+                        CLEAR_MASK(TypeCStatus3,TypeC_Laptop_Power_Charge_Target);
+                        CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
+                    }
                 }
-            }
+			}
+
+
+			//T495XU0004£º E+
             //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
             /*
             }
@@ -3662,12 +3686,13 @@ void P2P_Process(void)
         CLEAR_MASK(TypeCStatus3,P2PPowerSwapWait);
         SET_MASK(TypeCStatus2,TypeC_Laptop_Power_Type_Target);
         CLEAR_MASK(TypeCStatus2,TypeC_Laptop_Power_Charge_Status);
-        if((UCSI_RelativeStateOfChg != (OldInformation&0x7F))/*||((OldInformation>>7) != i)*/)  //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
+		//T495XU0004: Source side Power mode change,inform to sink side.
+        if((UCSI_RelativeStateOfChg != (OldInformation&0x7F))||(oldInformationOfPowerMode != ACPOWER_ON)/*||((OldInformation>>7) != i)*/)  //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
         {
             SendUnitInformationToPdc();
         }
         
-        if(UCSI_RelativeStateOfChg < 30)
+        if((UCSI_RelativeStateOfChg < 30)&&(CurrentTypeCWatt < 0x2d)) //T495XU0004: Source side not have above 45W AC attached.
         {
             if(UCSI_P2P_Charge_Disable == 0)
             {
@@ -3690,7 +3715,7 @@ void P2P_Process(void)
 
 void P2P_Process_Port2(void)
 {
-    BYTE i,UnitARSOCTemp,UnitASxTemp;
+    BYTE i,UnitARSOCTemp,UnitASxTemp,UnitAACTemp;
     WORD RemainCap1,RemainCap2;
     WORD FullChgCap1,FullChgCap2;
     DWORD RelativeStateOfChg;
@@ -3730,6 +3755,7 @@ void P2P_Process_Port2(void)
         {
             UnitARSOCTemp = AnoutherUnitInformation2[0] & 0x7F;
             UnitASxTemp = ((AnoutherUnitInformation2[1]&0x03) << 1) + (AnoutherUnitInformation2[0] >> 7);
+            UnitAACTemp = (AnoutherUnitInformation2[1]>>2)&0x01;//T495XU0004£º add
             //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
             //if(((i == 1) && (UnitASxTemp == 0))
             //   || ((i != 1) && (UnitASxTemp != 0))
@@ -3737,49 +3763,69 @@ void P2P_Process_Port2(void)
             //{
                 //Two units both are in Non-S0 or S0.
             //T495XU0003: E+
-            if(UnitARSOCTemp >= UCSI_RelativeStateOfChg)
-            {
-                if(UnitARSOCTemp > 30)
+            
+
+            //T495XU0004£º S+ AC system charge DC system for P2P V2.0
+            if((CurrentTypeCWatt >= 0x2d) && (UnitAACTemp == 1))
+			{
+                CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
+			}
+			else if((CurrentTypeCWatt >= 0x2d) && (UnitAACTemp == 0))
+			{
+                SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
+			}
+			else if(UnitAACTemp == 1)
+			{
+                SET_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target); 
+                CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
+			}
+			else if(UnitAACTemp == 0)
+			{
+                if(UnitARSOCTemp >= UCSI_RelativeStateOfChg)
                 {
-                    CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
-                    if((UnitARSOCTemp - UCSI_RelativeStateOfChg) < 3)        //T495XU0003: 20% change to 3% gap for P2P V2.0
+                    if(UnitARSOCTemp > 30)
                     {
-                        CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                        CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
+                        if((UnitARSOCTemp - UCSI_RelativeStateOfChg) < 3)        //T495XU0003: 20% change to 3% gap for P2P V2.0
+                        {
+                            CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                        }
+                        else
+                        {
+                            SET_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                        }
                     }
                     else
                     {
-                        SET_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                        CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                        CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
                     }
+
                 }
                 else
                 {
-                    CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
-                    CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
-                }
-
-            }
-            else
-            {
-                if(UCSI_RelativeStateOfChg > 30)
-                {
-                    if((UCSI_RelativeStateOfChg - UnitARSOCTemp) < 3)        //T495XU0003: 20% change to 3% gap for P2P V2.0
+                    if(UCSI_RelativeStateOfChg > 30)
                     {
-                        CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
-                        SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+                        if((UCSI_RelativeStateOfChg - UnitARSOCTemp) < 3)        //T495XU0003: 20% change to 3% gap for P2P V2.0
+                        {
+                            CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                            SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
+                        }
+                        else
+                        {
+                            SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
+                        }
                     }
                     else
                     {
-                        SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
+                        CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
+                        CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
                     }
-                }
-                else
-                {
-                    CLEAR_MASK(TypeCPort2Status3,TypeC_Laptop_Power_Charge_Target);
-                    CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
-                }
 
-            }
-
+                }
+			}
+			////T495XU0004£º E+
             //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
             /*
             }
@@ -3866,11 +3912,12 @@ void P2P_Process_Port2(void)
         CLEAR_MASK(TypeCPort2Status3,P2PPowerSwapWait);
         SET_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Type_Target);
         CLEAR_MASK(TypeCPort2Status2,TypeC_Laptop_Power_Charge_Status);
-        if((UCSI_RelativeStateOfChg != (OldInformation2&0x7F))/*||((OldInformation2>>7) != i)*/)  //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
+		//T495XU0004: Source side Power mode change,inform to sink side.
+        if((UCSI_RelativeStateOfChg != (OldInformation2&0x7F))||(oldInformationOfPowerMode != ACPOWER_ON)/*||((OldInformation2>>7) != i)*/)  //T495XU0003: S+  remove S0 and Non-S0 judge for P2P V2.0
         {
             SendUnitInformationToPdc_Port2();
         }
-        if(UCSI_RelativeStateOfChg < 30)
+        if((UCSI_RelativeStateOfChg < 30)&&(CurrentTypeCWatt < 0x2d))  //T495XU0004: Source side not have above 45W AC attached.
         {
             if(UCSI_P2P_Charge_Disable == 0)
             {
@@ -3969,10 +4016,18 @@ void SendUnitInformationToPdc(void)
         default :
             break;
     }
+    
     if(ACPOWER_ON)
     {
         //Set power mode
         SMB3_DATA[6] |= (0x01 << 2);
+	//T495XU0004£º S+ save Source system power mode. 
+        oldInformationOfPowerMode |= 0x01;        
+    }
+    else
+    {
+        oldInformationOfPowerMode &= 0xFE;
+	//T495XU0004£º E+.
     }
 
     SMB3_DATA[0] = 2;   //PDO number is 2
@@ -4052,10 +4107,18 @@ void SendUnitInformationToPdc_Port2(void)
         default :
             break;
     }
+    
     if(ACPOWER_ON)
     {
         //Set power mode
         SMB3_DATA[6] |= (0x01 << 2);
+	//T495XU0004£º S+ save Source system power mode.
+        oldInformationOfPowerMode |= 0x01;        
+    }
+    else
+    {
+        oldInformationOfPowerMode &= 0xFE;
+	//T495XU0004£º E+
     }
 
     SMB3_DATA[0] = 2;   //PDO number is 2

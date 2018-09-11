@@ -1657,6 +1657,8 @@ typedef enum
 #define  TYPE_C_RAM36              SD_Ptr_uchar_8(OEMRAM9+0x95)//for type-c used 0x95~0x96
 #define  TYPE_C_RAM37              SD_uchar_8(OEMRAM9+0x97)
 #define  TYPE_C_RAM38              SD_uchar_8(OEMRAM9+0x98)
+#define  TYPE_C_RAM39              SD_uchar_8(OEMRAM9+0x99)
+
 #define	 TYPE_C_RAM40				SD_uchar_8(OEMRAM9+0x9A)
 #define  TYPE_C_RAM41		SD_uchar_8(OEMRAM9+0xA0)
 #define  TYPE_C_RAM42		SD_uchar_8(OEMRAM9+0xA1)

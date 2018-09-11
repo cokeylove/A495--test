@@ -140,6 +140,7 @@
 #define  AnoutherUnitInformation2	            TYPE_C_RAM36    
 #define  OldInformation	                        TYPE_C_RAM37
 #define  OldInformation2	                    TYPE_C_RAM38
+#define  oldInformationOfPowerMode              TYPE_C_RAM39  //T495XU0004: add for save source system power mode.
 #endif
 
 #define  DockingPSW_ActiveCnt					TYPE_C_RAM40             
