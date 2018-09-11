@@ -93,19 +93,19 @@ void Hook_IRQ_INT8_ADC(void)
 //----------------------------------------------------------------------------
 void Hook_IRQ_INT9_SMBusA(void)
 {
-    DisableAllInterrupt();  //A485D000153+
+    DisableAllInterrupt();  //A485D000153+  //ke:Add solution fix dash infomation abnormal
 	CLEAR_MASK(IER1,Int_SMBUS0);
-    	ISR1 = Int_SMBUS0;
+    ISR1 = Int_SMBUS0;
 	F_Service_SMBus1=SMBus_NeedService;
 
 	F_Service_OEM_1 = 1;
 
 #if Support_DASH
     RamDebug(0xDA);
-		DashMain();
-		SET_MASK(IER1,Int_SMBUS0);
+	DashMain();
+	SET_MASK(IER1,Int_SMBUS0);
 #endif
-    EnableAllInterrupt(); //A485D000153+
+    EnableAllInterrupt(); //A485D000153+  //ke£ºAdd solution fix dash infomation abnormal
 }
 
 //----------------------------------------------------------------------------

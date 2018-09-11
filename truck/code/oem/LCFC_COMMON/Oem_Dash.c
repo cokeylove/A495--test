@@ -129,32 +129,32 @@ void SmbSlvRead(void)
     {
     	state = DASH_SLSTA;
     	if(!(state & I2C_SLV_STATE_INTRS))		//if no interrupts, continue.
-    { 
+        { 
        RamDebug(0xD2);     
     		continue;
     	} 
     	DASH_SLSTA = state;
     	
     	if(state & I2C_SLV_STATE_TIMEOUT) 
-     {   //Timeout
-       RamDebug(0xD3);
-       recvCnt = 0;
-       break;
-     }//end if
+        {   //Timeout
+            RamDebug(0xD3);
+            recvCnt = 0;
+            break;
+        }//end if
 
     	if(state & I2C_SLV_STATE_STOP)
     	{
-       RamDebug(0xD4);
-       recvCnt |= 0x80;		// set stop receive flag
+            RamDebug(0xD4);
+            recvCnt |= 0x80;		// set stop receive flag
     		break;
     	}
-     RamDebug(0xD5);   
-     SmbReadDataBuf[recvCnt] = DASH_SLDA;
-     SmbReadDataBuf[recvCnt] = DASH_SLDA;
-     SmbReadDataBuf[recvCnt] = DASH_SLDA;  //A485D000153+
-     recvCnt ++;
-   	 break;
-  }//end while
+        RamDebug(0xD5);   
+        SmbReadDataBuf[recvCnt] = DASH_SLDA;
+        SmbReadDataBuf[recvCnt] = DASH_SLDA;
+        SmbReadDataBuf[recvCnt] = DASH_SLDA;  //A485D000153+ //ke:re-read data find once always fail.
+        recvCnt ++;
+        break;
+    }//end while
 
     return; 
 }

@@ -1214,7 +1214,8 @@ void InitWakeFromDeepSleepForAC(void)
 	  Enable_Any_Key_Irq();  //msmart
 	
 	  //Init_ADC();
-	  Init_Dash();
+	  Init_Dash(); //ke:fix dash communication fail for IER register not configure from sleep to wakeup
+	  
 	  Init_Timers();
 	  EnableModuleInterrupt();
 	  
@@ -1293,7 +1294,7 @@ void InitWakeFromDeepSleep(void)
   Enable_Any_Key_Irq();  //msmart
 
   Init_ADC();
-  Init_Dash();
+  Init_Dash();   //ke:fix dash communication fail for IER register not configure from sleep to wakeup
   Init_Timers();
   EnableModuleInterrupt();
 
